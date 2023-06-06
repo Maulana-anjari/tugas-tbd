@@ -1,10 +1,10 @@
 const pool = require("../../connectDB")
 exports.index = async (req, res, next) => {
     try {
-        const books = await pool.query(`SELECT * FROM "BOOK" ORDER BY "ISBN" ASC`)
+        const authors = await pool.query(`SELECT * FROM "AUTHOR" ORDER BY "AUTHOR_ID" ASC`)
         res.status(200).json({
             error: false,
-            data: books
+            data: authors
         })
     } catch (error) {
         return next(error);

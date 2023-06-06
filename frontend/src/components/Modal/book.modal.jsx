@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
-
+import axios from "axios";
 export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
+  const [publishers, setPublishers] = useState([]);
+  const [genres, setGenres] = useState([]);
+  const [authors, setAuthors] = useState([]);
   const [formState, setFormState] = useState({
     ISBN: "",
     TITLE: "",
@@ -22,7 +25,20 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
       setFormState(defaultValue);
     }
   }, [defaultValue]);
-
+  useEffect(() => {
+    const adminApi = axios.create({
+      baseURL: "http://localhost:3001",
+    });
+    adminApi.get("/books/publisher").then((res) => {
+      setPublishers(res.data.data.rows);
+    });
+    adminApi.get("/books/genre").then((res) => {
+      setGenres(res.data.data.rows);
+    });
+    adminApi.get("/books/author").then((res) => {
+      setAuthors(res.data.data.rows);
+    });
+  }, []);
   const validateForm = () => {
     const { ISBN, TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, LANGUAGE, PAGES, GENRE, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = formState;
     if (ISBN && TITLE && PUBLISHER_ID && PUBLICATION_YEAR && EDITION && AUTHOR_ID && LANGUAGE && PAGES && GENRE && SYNOPSIS && CAPITAL_PRICE && SELLING_PRICE) {
@@ -102,10 +118,9 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                   value={formState.PUBLISHER_ID}
                   className="border border-black rounded-md p-1 text-base w-64"
                 >
-                  <option value="">Select</option>
-                  <option value="1">Active</option>
-                  <option value="2">Non Active</option>
-                  <option value="3">Nothing</option>
+                  {publishers.map((pub, index) => (
+                    <option value={pub?.PUBLISHER_ID}>{pub?.PUBLISHER_NAME}</option>
+                  ))}
                 </select>
               </div>
               <div className="flex flex-col mb-4">
@@ -142,10 +157,9 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                   value={formState.AUTHOR_ID}
                   className="border border-black rounded-md p-1 text-base w-64"
                 >
-                  <option value="">Select</option>
-                  <option value="1">Active</option>
-                  <option value="2">Non Active</option>
-                  <option value="3">Nothing</option>
+                  {authors.map((pub, index) => (
+                    <option value={pub?.AUTHOR_ID}>{pub?.AUTHOR_NAME}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -183,10 +197,9 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                   value={formState.GENRE}
                   className="border border-black rounded-md p-1 text-base w-64"
                 >
-                  <option value="">Select</option>
-                  <option value="1">Active</option>
-                  <option value="2">Non Active</option>
-                  <option value="3">Nothing</option>
+                  {genres.map((pub, index) => (
+                    <option value={pub?.GENRE_ID}>{pub?.GENRE}</option>
+                  ))}
                 </select>
               </div>
               <div className="flex flex-col mb-4">
