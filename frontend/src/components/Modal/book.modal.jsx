@@ -44,8 +44,8 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
     });
   }, []);
   const validateForm = () => {
-    const { ISBN, TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, LANGUAGE, PAGES, GENRE, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = formState;
-    if (ISBN && TITLE && PUBLISHER_ID && PUBLICATION_YEAR && EDITION && (AUTHOR_ID === []) && LANGUAGE && PAGES && (GENRE === []) && SYNOPSIS && CAPITAL_PRICE && SELLING_PRICE) {
+    const { ISBN, TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, LANGUAGE, PAGES, GENRE_ID, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = formState;
+    if (ISBN && TITLE && PUBLISHER_ID && PUBLICATION_YEAR && EDITION && AUTHOR_ID && GENRE_ID && LANGUAGE && PAGES && SYNOPSIS && CAPITAL_PRICE && SELLING_PRICE) {
       setErrors("");
       return true;
     } else {
@@ -82,7 +82,7 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
     e.preventDefault();
 
     if (!validateForm()) return;
-
+    console.log(formState);
     onSubmit(formState);
 
     closeModal();

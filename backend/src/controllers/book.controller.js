@@ -24,7 +24,15 @@ exports.index = async (req, res, next) => {
 exports.create = async (req, res, next) => {
     const { ISBN, TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, GENRE_ID, LANGUAGE, PAGES, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = req.body;
     try {
-        await client.query('BEGIN'); // Mulai transaksi
+        const checkBook = await pool.query(`SELECT * FROM "BOOK" WHERE "ISBN" = $1;`, [ISBN]);
+
+        if (checkBook.rows.length > 0) {
+            return res.status(501).json({
+                error: true,
+                message: `Buku dengan ISBN ${ISBN} sudah ada!`,
+            });
+        }
+        // await pool.query('BEGIN'); // Mulai transaksi
         const newBook = await pool.query('INSERT INTO "BOOK" ("ISBN", "TITLE", "PUBLISHER_ID", "PUBLICATION_YEAR", "EDITION", "LANGUAGE", "PAGES", "SYNOPSIS", "CAPITAL_PRICE", "SELLING_PRICE", "LAST_UPDATED") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_DATE) RETURNING *',
             [
                 parseInt(ISBN, 10),
@@ -43,43 +51,41 @@ exports.create = async (req, res, next) => {
         if (Array.isArray(AUTHOR_ID)) {
             // Variabel AUTHOR_ID adalah array
             for (const authorId of AUTHOR_ID) {
-                await client.query('INSERT INTO "BOOK_AUTHOR" ("BOOK_ID", "AUTHOR_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
-                    [bookId, authorId]);
+                await pool.query('INSERT INTO "BOOK_AUTHOR" ("BOOK_ID", "AUTHOR_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
+                    [parseInt(bookId, 10), parseInt(authorId, 10)]);
             }
         } else {
             // Variabel AUTHOR_ID bukan array
-            await client.query('INSERT INTO "BOOK_AUTHOR" ("BOOK_ID", "AUTHOR_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
-                [bookId, AUTHOR_ID]);
+            await pool.query('INSERT INTO "BOOK_AUTHOR" ("BOOK_ID", "AUTHOR_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
+                [parseInt(bookId, 10), parseInt(AUTHOR_ID, 10)]);
         }
         if (Array.isArray(GENRE_ID)) {
             // Variabel GENRE_ID adalah array
             for (const genreId of GENRE_ID) {
-                await client.query('INSERT INTO "BOOK_GENRE" ("BOOK_ID", "GENRE_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
-                    [bookId, genreId]);
+                await pool.query('INSERT INTO "BOOK_GENRE" ("BOOK_ID", "GENRE_ID", "LAST_UPDATED") VALUES ($1, $2, CURRENT_DATE)',
+                    [parseInt(bookId, 10), parseInt(genreId, 10)]);
             }
         } else {
             // Variabel AUTHOR_ID bukan array
-            await client.query('INSERT INTO "BOOK_GENRE" ("BOOK_ID", "GENRE_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
-                [bookId, GENRE_ID]);
+            await pool.query('INSERT INTO "BOOK_GENRE" ("BOOK_ID", "GENRE_ID", "LAST_UPDATED") VALUES ($1, $2, CURRENT_DATE)',
+                [parseInt(bookId, 10), parseInt(GENRE_ID, 10)]);
         }
 
-        await client.query('COMMIT'); // Commit transaksi jika berhasil
+        await pool.query('COMMIT'); // Commit transaksi jika berhasil
         res.status(201).json({
             error: false,
-            message: `Berhasil menambahkan buku`,
+            message: `Berhasil menambahkan buku ${bookId}`,
         })
     } catch (error) {
-        await client.query('ROLLBACK'); // Rollback transaksi jika terjadi error    
+        await pool.query('ROLLBACK'); // Rollback transaksi jika terjadi error    
         return next(error);
-    } finally {
-        client.release(); // Release koneksi client ke pool
     }
 }
 
 exports.delete = async (req, res, next) => {
     const id = req.params.id
     try {
-
+        await pool.query(`DELETE FROM "BOOK" WHERE "ISBN" = $1;`, [id]);
         res.status(200).json({
             error: false,
             message: `Berhasil menghapus buku dengan id ${id}`

@@ -24,23 +24,24 @@ function Book() {
     };
   
     const handleSubmit = (newRow) => {
-      // const adminApi = axios.create({
-      //   baseURL: "http://localhost:3001",
-      // });
-      // adminApi.post(`/books`, newRow).then((res) => {
-      //   alert(res.data.message);
-      // });
-      // rowToEdit === null
-      //   ? setRows([...rows, newRow])
-      //   : setRows(
-      //       rows.map((currRow, index) => {
-      //         if (index !== rowToEdit) return currRow;
+      const adminApi = axios.create({
+        baseURL: "http://localhost:3001",
+      });
+      adminApi.post(`/books`, newRow).then((res) => {
+        alert(res.data.message);
+        console.log(res.data);
+      });
+      rowToEdit === null
+        ? setRows([...rows, newRow])
+        : setRows(
+            rows.map((currRow, index) => {
+              if (index !== rowToEdit) return currRow;
   
-      //         return newRow;
-      //       })
-      //     );
-      console.log(newRow);
-      window.location.reload(true);
+              return newRow;
+            })
+          );
+      // console.log(newRow);
+      // window.location.reload(true);
     };
     useEffect(() => {
       const adminApi = axios.create({
