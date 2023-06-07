@@ -24,6 +24,7 @@ exports.index = async (req, res, next) => {
 exports.create = async (req, res, next) => {
     const { ISBN, TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, GENRE_ID, LANGUAGE, PAGES, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = req.body;
     try {
+        await pool.query('BEGIN');
         const checkBook = await pool.query(`SELECT * FROM "BOOK" WHERE "ISBN" = $1;`, [ISBN]);
 
         if (checkBook.rows.length > 0) {
@@ -98,7 +99,7 @@ exports.update = async (req, res, next) => {
     const id = req.params.id;
     try {
         const { TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, GENRE_ID, LANGUAGE, PAGES, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = req.body;
-
+        await pool.query('BEGIN');
         const query = `
         UPDATE "BOOK"
         SET "TITLE" = $1,
@@ -154,14 +155,16 @@ exports.update = async (req, res, next) => {
             `;
 
         const genreValues = [GENRE_ID, id];
-
         await pool.query(genreQuery, genreValues);
+
+        await pool.query('COMMIT');
         return res.status(200).json({
             error: false,
             message: `Berhasil mengubah buku dengan ID ${id}`,
             data: result.rows[0],
         });
     } catch (error) {
+        await pool.query('ROLLBACK');
         return next(error);
     }
 };

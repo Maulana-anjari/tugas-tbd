@@ -106,13 +106,20 @@ export const Modal = ({ closeModal, onSubmit, defaultValue, mode }) => {
                 <label htmlFor="ISBN" className="font-semibold">
                   ISBN
                 </label>
-                <input
+                {mode === "edit" ? (<input
+                  name="ISBN"
+                  type="number"
+                  onChange={handleChange}
+                  value={formState.ISBN}
+                  readOnly
+                  className="border border-black rounded-md p-1 text-base w-64"
+                />) : (<input
                   name="ISBN"
                   type="number"
                   onChange={handleChange}
                   value={formState.ISBN}
                   className="border border-black rounded-md p-1 text-base w-64"
-                />
+                />)}
               </div>
               <div className="flex flex-col mb-4">
                 <label htmlFor="TITLE" className="font-semibold">
