@@ -12,12 +12,12 @@ exports.index           = async (req, res, next) => {
 }
 
 exports.create          = async (req, res, next) => {
-    const {penerima, judul, isi} = req.body;
+    const { } = req.body;
     try {
         
         res.status(201).json({
             error: false,
-            message: `Berhasil membuat buku`,
+            message: `Berhasil membuat staff`,
         })
     } catch (error) {
         return next(error);
@@ -30,7 +30,7 @@ exports.delete          = async (req, res, next) => {
         
         res.status(200).json({
             error: false,
-            message: `Berhasil menghapus buku dengan id ${id}`
+            message: `Berhasil menghapus staff dengan id ${id}`
         })
     } catch (error) {
         return next(error);
@@ -42,7 +42,7 @@ exports.update          = async (req, res, next) => {
         
         res.status(200).json({
             error: false,
-            message: "Berhasil mengubah buku"
+            message: "Berhasil mengubah staff"
         })
     } catch (error) {
         return next(error);

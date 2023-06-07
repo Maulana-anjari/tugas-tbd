@@ -16,7 +16,7 @@ exports.create = async (req, res, next) => {
     try {
         res.status(201).json({
             error: false,
-            message: `Berhasil menambahkan buku`,
+            message: `Berhasil menambahkan publisher`,
         })
     } catch (error) {
         return next(error);
@@ -29,7 +29,7 @@ exports.delete = async (req, res, next) => {
 
         res.status(200).json({
             error: false,
-            message: `Berhasil menghapus buku dengan id ${id}`
+            message: `Berhasil menghapus publisher dengan id ${id}`
         })
     } catch (error) {
         return next(error);
@@ -41,7 +41,7 @@ exports.update = async (req, res, next) => {
 
         res.status(200).json({
             error: false,
-            message: "Berhasil mengubah buku"
+            message: "Berhasil mengubah publisher"
         })
     } catch (error) {
         return next(error);
