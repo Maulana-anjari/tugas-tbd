@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import axios from "axios";
-export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
+export const Modal = ({ closeModal, onSubmit, defaultValue, mode }) => {
   const [publishers, setPublishers] = useState([]);
   const [genres, setGenres] = useState([]);
   const [authors, setAuthors] = useState([]);
@@ -82,8 +82,7 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
     e.preventDefault();
 
     if (!validateForm()) return;
-    console.log(formState);
-    onSubmit(formState);
+    onSubmit(formState, mode);
 
     closeModal();
   };
@@ -178,8 +177,8 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                   className="border border-black rounded-md p-1 text-base w-64"
                 >
                   <option selected className="none"></option>
-                  {authors.map((pub, index) => (
-                    <option value={pub?.AUTHOR_ID} key={index}>{pub?.AUTHOR_NAME}</option>
+                  {authors.map((author, index) => (
+                    <option value={author?.AUTHOR_ID} key={index}>{author?.AUTHOR_NAME}</option>
                   ))}
                 </select>
                 {/* <Select
@@ -229,8 +228,8 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                   className="border border-black rounded-md p-1 text-base w-64"
                 >
                   <option selected className="none"></option>
-                  {genres.map((pub, index) => (
-                    <option value={pub?.GENRE_ID} key={index}>{pub?.GENRE}</option>
+                  {genres.map((genre, index) => (
+                    <option value={genre?.GENRE_ID} key={index}>{genre?.GENRE}</option>
                   ))}
                 </select>
               </div>

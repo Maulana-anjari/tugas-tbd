@@ -10,7 +10,7 @@ export const BookTable = ({ rows, deleteRow, editRow }) => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                  <th
+                    <th
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
@@ -143,7 +143,11 @@ export const BookTable = ({ rows, deleteRow, editRow }) => {
                         <a
                           href="#"
                           className="text-indigo-600 hover:text-indigo-900"
-                          onClick={() => editRow(index, row.ISBN)}
+                          onClick={() => {
+                            editRow(index, row.ISBN)
+                            console.log(row)
+                          }
+                          }
                         >
                           Edit
                         </a>

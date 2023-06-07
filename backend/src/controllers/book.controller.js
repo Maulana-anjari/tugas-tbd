@@ -2,14 +2,14 @@ const pool = require("../../connectDB")
 exports.index = async (req, res, next) => {
     try {
         const books = await pool.query(`
-            SELECT b.*, STRING_AGG(DISTINCT a."AUTHOR_NAME", ', ') AS "AUTHOR_NAMES", STRING_AGG(DISTINCT g."GENRE", ', ') AS "GENRE_NAMES", "PUBLISHER"."PUBLISHER_NAME"
+            SELECT b.*, STRING_AGG(DISTINCT a."AUTHOR_NAME", ', ') AS "AUTHOR_NAMES", STRING_AGG(DISTINCT g."GENRE", ', ') AS "GENRE_NAMES", "PUBLISHER"."PUBLISHER_NAME", a."AUTHOR_ID", g."GENRE_ID"
             FROM "BOOK" b
             JOIN "PUBLISHER" ON b."PUBLISHER_ID" = "PUBLISHER"."PUBLISHER_ID"
             JOIN "BOOK_AUTHOR" ba ON b."ISBN" = ba."BOOK_ID"
             JOIN "AUTHOR" a ON ba."AUTHOR_ID" = a."AUTHOR_ID"
             JOIN "BOOK_GENRE" bg ON b."ISBN" = bg."BOOK_ID"
             JOIN "GENRE" g ON bg."GENRE_ID" = g."GENRE_ID"
-            GROUP BY b."ISBN", "PUBLISHER"."PUBLISHER_NAME"
+            GROUP BY b."ISBN", "PUBLISHER"."PUBLISHER_NAME", a."AUTHOR_ID", g."GENRE_ID"
             ORDER BY b."ISBN" ASC;
             `);
         res.status(200).json({
