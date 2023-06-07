@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Select from "react-select";
 import axios from "axios";
 export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
   const [publishers, setPublishers] = useState([]);
@@ -13,13 +14,12 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
     AUTHOR_ID: "",
     LANGUAGE: "",
     PAGES: "",
-    GENRE: "",
+    GENRE_ID: "",
     SYNOPSIS: "",
     CAPITAL_PRICE: "",
     SELLING_PRICE: "",
   });
   const [errors, setErrors] = useState("");
-
   useEffect(() => {
     if (defaultValue) {
       setFormState(defaultValue);
@@ -30,7 +30,11 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
       baseURL: "http://localhost:3001",
     });
     adminApi.get("/books/publisher").then((res) => {
-      setPublishers(res.data.data.rows);
+      const pubs = res.data.data.rows;
+      // setPublishers(pubs.map(pub => (
+      //   { value: pub.PUBLISHER_ID, label: pub.PUBLISHER_NAME }
+      // )));
+      setPublishers(pubs);
     });
     adminApi.get("/books/genre").then((res) => {
       setGenres(res.data.data.rows);
@@ -41,7 +45,7 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
   }, []);
   const validateForm = () => {
     const { ISBN, TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, LANGUAGE, PAGES, GENRE, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = formState;
-    if (ISBN && TITLE && PUBLISHER_ID && PUBLICATION_YEAR && EDITION && AUTHOR_ID && LANGUAGE && PAGES && GENRE && SYNOPSIS && CAPITAL_PRICE && SELLING_PRICE) {
+    if (ISBN && TITLE && PUBLISHER_ID && PUBLICATION_YEAR && EDITION && (AUTHOR_ID === []) && LANGUAGE && PAGES && (GENRE === []) && SYNOPSIS && CAPITAL_PRICE && SELLING_PRICE) {
       setErrors("");
       return true;
     } else {
@@ -57,8 +61,22 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
   };
 
   const handleChange = (e) => {
+    // if (e.target.name === "AUTHOR_ID") {
+    //   setFormState((prevFormState) => ({
+    //     ...prevFormState,
+    //     AUTHOR_ID: [...prevFormState.AUTHOR_ID, e.target.value],
+    //   }));
+    // } else if (e.target.name === "GENRE_ID") {
+    //   setFormState((prevFormState) => ({
+    //     ...prevFormState,
+    //     GENRE_ID: [...prevFormState.GENRE_ID, e.target.value],
+    //   }));
+    // } else {
+    //   setFormState({ ...formState, [e.target.name]: e.target.value });
+    // }
     setFormState({ ...formState, [e.target.name]: e.target.value });
   };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -90,7 +108,7 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                   ISBN
                 </label>
                 <input
-                  name="ISBN" 
+                  name="ISBN"
                   type="number"
                   onChange={handleChange}
                   value={formState.ISBN}
@@ -118,8 +136,9 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                   value={formState.PUBLISHER_ID}
                   className="border border-black rounded-md p-1 text-base w-64"
                 >
+                  <option selected className="none"></option>
                   {publishers.map((pub, index) => (
-                    <option value={pub?.PUBLISHER_ID}>{pub?.PUBLISHER_NAME}</option>
+                    <option value={pub?.PUBLISHER_ID} key={index}>{pub?.PUBLISHER_NAME}</option>
                   ))}
                 </select>
               </div>
@@ -155,12 +174,23 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                   name="AUTHOR_ID"
                   onChange={handleChange}
                   value={formState.AUTHOR_ID}
+                  // multiple="multiple"
                   className="border border-black rounded-md p-1 text-base w-64"
                 >
+                  <option selected className="none"></option>
                   {authors.map((pub, index) => (
-                    <option value={pub?.AUTHOR_ID}>{pub?.AUTHOR_NAME}</option>
+                    <option value={pub?.AUTHOR_ID} key={index}>{pub?.AUTHOR_NAME}</option>
                   ))}
                 </select>
+                {/* <Select
+                  defaultValue={[authors[1]]}
+                  isMulti
+                  name="AUTHOR_ID"
+                  options={authors}
+                  onChange={handleAuhtorChange}
+                  className="border border-black rounded-md p-1 text-base w-64"
+                  classNamePrefix="select"
+                /> */}
               </div>
             </div>
             <div className="p-2">
@@ -188,17 +218,19 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
                 />
               </div>
               <div className="flex flex-col mb-4">
-                <label htmlFor="GENRE" className="font-semibold">
+                <label htmlFor="GENRE_ID" className="font-semibold">
                   GENRE
                 </label>
                 <select
-                  name="GENRE"
+                  name="GENRE_ID"
                   onChange={handleChange}
-                  value={formState.GENRE}
+                  value={formState.GENRE_ID}
+                  // multiple="multiple"
                   className="border border-black rounded-md p-1 text-base w-64"
                 >
+                  <option selected className="none"></option>
                   {genres.map((pub, index) => (
-                    <option value={pub?.GENRE_ID}>{pub?.GENRE}</option>
+                    <option value={pub?.GENRE_ID} key={index}>{pub?.GENRE}</option>
                   ))}
                 </select>
               </div>

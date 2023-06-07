@@ -82,6 +82,13 @@ export const BookTable = ({ rows, deleteRow, editRow }) => {
                     >
                       Selling Price
                     </th>
+                    <th
+                      scope="col"
+                      colSpan={2}
+                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -103,7 +110,7 @@ export const BookTable = ({ rows, deleteRow, editRow }) => {
                         <div className="text-sm text-gray-900">{row.EDITION}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{row.AUTHOR_NAME || "-"}</div>
+                        <div className="text-sm text-gray-900">{row.AUTHOR_NAMES}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{row.LANGUAGE}</div>
@@ -112,7 +119,7 @@ export const BookTable = ({ rows, deleteRow, editRow }) => {
                         <div className="text-sm text-gray-900">{row.PAGES}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{row.GENRE || "-"}</div>
+                        <div className="text-sm text-gray-900">{row.GENRE_NAMES}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{row.SYNOPSIS}</div>

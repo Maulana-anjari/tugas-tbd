@@ -2,22 +2,19 @@ const pool = require("../../connectDB")
 exports.index = async (req, res, next) => {
     try {
         const books = await pool.query(`
-            SELECT "BOOK".*, "PUBLISHER"."PUBLISHER_NAME"
-            FROM "BOOK"
-            JOIN "PUBLISHER" ON "BOOK"."PUBLISHER_ID" = "PUBLISHER"."PUBLISHER_ID"
-            ORDER BY "BOOK"."ISBN" ASC
-            `);
-            const booksss = await pool.query(`
-            SELECT b.*, a."AUTHOR_NAME", "PUBLISHER"."PUBLISHER_NAME"
+            SELECT b.*, STRING_AGG(DISTINCT a."AUTHOR_NAME", ', ') AS "AUTHOR_NAMES", STRING_AGG(DISTINCT g."GENRE", ', ') AS "GENRE_NAMES", "PUBLISHER"."PUBLISHER_NAME"
             FROM "BOOK" b
             JOIN "PUBLISHER" ON b."PUBLISHER_ID" = "PUBLISHER"."PUBLISHER_ID"
-            INNER JOIN "BOOK_AUTHOR" ba ON b."ISBN" = ba."BOOK_ID"
-            INNER JOIN "AUTHOR" a ON ba."AUTHOR_ID" = a."AUTHOR_ID"
-            ORDER BY b."ISBN" ASC
+            JOIN "BOOK_AUTHOR" ba ON b."ISBN" = ba."BOOK_ID"
+            JOIN "AUTHOR" a ON ba."AUTHOR_ID" = a."AUTHOR_ID"
+            JOIN "BOOK_GENRE" bg ON b."ISBN" = bg."BOOK_ID"
+            JOIN "GENRE" g ON bg."GENRE_ID" = g."GENRE_ID"
+            GROUP BY b."ISBN", "PUBLISHER"."PUBLISHER_NAME"
+            ORDER BY b."ISBN" ASC;
             `);
         res.status(200).json({
             error: false,
-            data: booksss
+            data: books
         })
     } catch (error) {
         return next(error);
@@ -25,9 +22,10 @@ exports.index = async (req, res, next) => {
 }
 
 exports.create = async (req, res, next) => {
-    const { ISBN, TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR, LANGUAGE, PAGES, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = req.body;
+    const { ISBN, TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, GENRE_ID, LANGUAGE, PAGES, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = req.body;
     try {
-        const result = await pool.query('INSERT INTO "BOOK" ("ISBN", "TITLE", "PUBLISHER_ID", "PUBLICATION_YEAR", "EDITION", "LANGUAGE", "PAGES", "SYNOPSIS", "CAPITAL_PRICE", "SELLING_PRICE", "LAST_UPDATED") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_DATE) RETURNING *',
+        await client.query('BEGIN'); // Mulai transaksi
+        const newBook = await pool.query('INSERT INTO "BOOK" ("ISBN", "TITLE", "PUBLISHER_ID", "PUBLICATION_YEAR", "EDITION", "LANGUAGE", "PAGES", "SYNOPSIS", "CAPITAL_PRICE", "SELLING_PRICE", "LAST_UPDATED") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_DATE) RETURNING *',
             [
                 parseInt(ISBN, 10),
                 TITLE,
@@ -40,12 +38,41 @@ exports.create = async (req, res, next) => {
                 parseInt(CAPITAL_PRICE, 10),
                 parseInt(SELLING_PRICE, 10)
             ]);
+        // Simpan data di tabel "book_author"
+        const bookId = newBook.rows[0].ISBN; // Dapatkan nilai ISBN dari hasil query sebelumnya
+        if (Array.isArray(AUTHOR_ID)) {
+            // Variabel AUTHOR_ID adalah array
+            for (const authorId of AUTHOR_ID) {
+                await client.query('INSERT INTO "BOOK_AUTHOR" ("BOOK_ID", "AUTHOR_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
+                    [bookId, authorId]);
+            }
+        } else {
+            // Variabel AUTHOR_ID bukan array
+            await client.query('INSERT INTO "BOOK_AUTHOR" ("BOOK_ID", "AUTHOR_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
+                [bookId, AUTHOR_ID]);
+        }
+        if (Array.isArray(GENRE_ID)) {
+            // Variabel GENRE_ID adalah array
+            for (const genreId of GENRE_ID) {
+                await client.query('INSERT INTO "BOOK_GENRE" ("BOOK_ID", "GENRE_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
+                    [bookId, genreId]);
+            }
+        } else {
+            // Variabel AUTHOR_ID bukan array
+            await client.query('INSERT INTO "BOOK_GENRE" ("BOOK_ID", "GENRE_ID", "LAST_UPDATE") VALUES ($1, $2, CURRENT_DATE)',
+                [bookId, GENRE_ID]);
+        }
+
+        await client.query('COMMIT'); // Commit transaksi jika berhasil
         res.status(201).json({
             error: false,
             message: `Berhasil menambahkan buku`,
         })
     } catch (error) {
+        await client.query('ROLLBACK'); // Rollback transaksi jika terjadi error    
         return next(error);
+    } finally {
+        client.release(); // Release koneksi client ke pool
     }
 }
 
