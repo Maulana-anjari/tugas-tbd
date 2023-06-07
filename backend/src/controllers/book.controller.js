@@ -49,6 +49,8 @@ exports.create = async (req, res, next) => {
             ]);
         // Simpan data di tabel "book_author"
         const bookId = newBook.rows[0].ISBN; // Dapatkan nilai ISBN dari hasil query sebelumnya
+        // saya buat 2 skenario karena harusnya satu buku bisa punya banyak author dan banyak genre,
+        // tapi karena saya hanya bisa untuk 1 inputan saja maka saya buat 2 skenario ini yang bisa menerima array dan text
         if (Array.isArray(AUTHOR_ID)) {
             // Variabel AUTHOR_ID adalah array
             for (const authorId of AUTHOR_ID) {
@@ -75,7 +77,7 @@ exports.create = async (req, res, next) => {
         await pool.query('COMMIT'); // Commit transaksi jika berhasil
         res.status(201).json({
             error: false,
-            message: `Berhasil menambahkan buku ${bookId}`,
+            message: `Berhasil menambahkan buku dengan ISBN: ${bookId}`,
         })
     } catch (error) {
         await pool.query('ROLLBACK'); // Rollback transaksi jika terjadi error    
@@ -89,7 +91,7 @@ exports.delete = async (req, res, next) => {
         await pool.query(`DELETE FROM "BOOK" WHERE "ISBN" = $1;`, [id]);
         res.status(200).json({
             error: false,
-            message: `Berhasil menghapus buku dengan id ${id}`
+            message: `Berhasil menghapus buku dengan ISBN ${id}`
         })
     } catch (error) {
         return next(error);
@@ -98,24 +100,23 @@ exports.delete = async (req, res, next) => {
 exports.update = async (req, res, next) => {
     const id = req.params.id;
     try {
-        const { TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, GENRE_ID, LANGUAGE, PAGES, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = req.body;
-        await pool.query('BEGIN');
-        const query = `
-        UPDATE "BOOK"
-        SET "TITLE" = $1,
-            "PUBLISHER_ID" = $2,
-            "PUBLICATION_YEAR" = $3,
-            "EDITION" = $4,
-            "LANGUAGE" = $5,
-            "PAGES" = $6,
-            "SYNOPSIS" = $7,
-            "CAPITAL_PRICE" = $8,
-            "SELLING_PRICE" = $9
-        WHERE "ISBN" = $10
-        RETURNING *;
-      `;
+        const {
+            TITLE,
+            PUBLISHER_ID,
+            PUBLICATION_YEAR,
+            EDITION,
+            AUTHOR_ID,
+            GENRE_ID,
+            LANGUAGE,
+            PAGES,
+            SYNOPSIS,
+            CAPITAL_PRICE,
+            SELLING_PRICE,
+        } = req.body;
 
-        const values = [
+        await pool.query('BEGIN');
+
+        const book = await updateBook(id, {
             TITLE,
             PUBLISHER_ID,
             PUBLICATION_YEAR,
@@ -125,46 +126,82 @@ exports.update = async (req, res, next) => {
             SYNOPSIS,
             CAPITAL_PRICE,
             SELLING_PRICE,
-            id,
-        ];
+        });
 
-        const result = await pool.query(query, values);
-
-        if (result.rows.length === 0) {
+        if (!book) {
             return res.status(404).json({
                 error: true,
-                message: `Buku dengan ID ${id} tidak ditemukan`,
+                message: `Buku dengan ISBN ${id} tidak ditemukan`,
             });
         }
-        // Update tabel BOOK_AUTHOR
-        const authorQuery = `
-            UPDATE "BOOK_AUTHOR"
-            SET "AUTHOR_ID" = $1
-            WHERE "BOOK_ID" = $2;
-            `;
 
-        const authorValues = [AUTHOR_ID, id];
-
-        await pool.query(authorQuery, authorValues);
-
-        // Update tabel BOOK_GENRE
-        const genreQuery = `
-            UPDATE "BOOK_GENRE"
-            SET "GENRE_ID" = $1
-            WHERE "BOOK_ID" = $2;
-            `;
-
-        const genreValues = [GENRE_ID, id];
-        await pool.query(genreQuery, genreValues);
+        await updateBookAuthor(id, AUTHOR_ID);
+        await updateBookGenre(id, GENRE_ID);
 
         await pool.query('COMMIT');
+
         return res.status(200).json({
             error: false,
-            message: `Berhasil mengubah buku dengan ID ${id}`,
-            data: result.rows[0],
+            message: `Berhasil mengubah buku dengan ISBN ${id}`,
+            data: book,
         });
     } catch (error) {
         await pool.query('ROLLBACK');
         return next(error);
     }
 };
+
+const updateBook = async (id, {
+    TITLE,
+    PUBLISHER_ID,
+    PUBLICATION_YEAR,
+    EDITION,
+    LANGUAGE,
+    PAGES,
+    SYNOPSIS,
+    CAPITAL_PRICE,
+    SELLING_PRICE,
+}) => {
+    const query = `
+      UPDATE "BOOK"
+      SET "TITLE" = $1,
+          "PUBLISHER_ID" = $2,
+          "PUBLICATION_YEAR" = $3,
+          "EDITION" = $4,
+          "LANGUAGE" = $5,
+          "PAGES" = $6,
+          "SYNOPSIS" = $7,
+          "CAPITAL_PRICE" = $8,
+          "SELLING_PRICE" = $9
+      WHERE "ISBN" = $10
+      RETURNING *;
+    `;
+
+    const values = [
+        TITLE,
+        PUBLISHER_ID,
+        PUBLICATION_YEAR,
+        EDITION,
+        LANGUAGE,
+        PAGES,
+        SYNOPSIS,
+        CAPITAL_PRICE,
+        SELLING_PRICE,
+        id,
+    ];
+
+    const result = await pool.query(query, values);
+    return result.rows[0];
+}
+
+const updateBookAuthor = async (id, AUTHOR_ID) => {
+    const query = `UPDATE "BOOK_AUTHOR" SET "AUTHOR_ID" = $1 WHERE "BOOK_ID" = $2;`;
+    const values = [AUTHOR_ID, id];
+    await pool.query(query, values);
+}
+
+const updateBookGenre = async (id, GENRE_ID) => {
+    const query = `UPDATE "BOOK_GENRE" SET "GENRE_ID" = $1 WHERE "BOOK_ID" = $2;`;
+    const values = [GENRE_ID, id];
+    await pool.query(query, values);
+}
