@@ -33,7 +33,7 @@ function Book() {
         window.location.reload(true);
       });
     } else {
-      adminApi.put(`/books`, newRow).then((res) => {
+      adminApi.put(`/books/${newRow?.ISBN}`, newRow).then((res) => {
         alert(res.data.message);
         window.location.reload(true);
       });

@@ -95,14 +95,73 @@ exports.delete = async (req, res, next) => {
     }
 }
 exports.update = async (req, res, next) => {
-    const id = req.params.id
+    const id = req.params.id;
     try {
+        const { TITLE, PUBLISHER_ID, PUBLICATION_YEAR, EDITION, AUTHOR_ID, GENRE_ID, LANGUAGE, PAGES, SYNOPSIS, CAPITAL_PRICE, SELLING_PRICE } = req.body;
 
-        res.status(200).json({
+        const query = `
+        UPDATE "BOOK"
+        SET "TITLE" = $1,
+            "PUBLISHER_ID" = $2,
+            "PUBLICATION_YEAR" = $3,
+            "EDITION" = $4,
+            "LANGUAGE" = $5,
+            "PAGES" = $6,
+            "SYNOPSIS" = $7,
+            "CAPITAL_PRICE" = $8,
+            "SELLING_PRICE" = $9
+        WHERE "ISBN" = $10
+        RETURNING *;
+      `;
+
+        const values = [
+            TITLE,
+            PUBLISHER_ID,
+            PUBLICATION_YEAR,
+            EDITION,
+            LANGUAGE,
+            PAGES,
+            SYNOPSIS,
+            CAPITAL_PRICE,
+            SELLING_PRICE,
+            id,
+        ];
+
+        const result = await pool.query(query, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                error: true,
+                message: `Buku dengan ID ${id} tidak ditemukan`,
+            });
+        }
+        // Update tabel BOOK_AUTHOR
+        const authorQuery = `
+            UPDATE "BOOK_AUTHOR"
+            SET "AUTHOR_ID" = $1
+            WHERE "BOOK_ID" = $2;
+            `;
+
+        const authorValues = [AUTHOR_ID, id];
+
+        await pool.query(authorQuery, authorValues);
+
+        // Update tabel BOOK_GENRE
+        const genreQuery = `
+            UPDATE "BOOK_GENRE"
+            SET "GENRE_ID" = $1
+            WHERE "BOOK_ID" = $2;
+            `;
+
+        const genreValues = [GENRE_ID, id];
+
+        await pool.query(genreQuery, genreValues);
+        return res.status(200).json({
             error: false,
-            message: "Berhasil mengubah buku"
-        })
+            message: `Berhasil mengubah buku dengan ID ${id}`,
+            data: result.rows[0],
+        });
     } catch (error) {
         return next(error);
     }
-}
+};
